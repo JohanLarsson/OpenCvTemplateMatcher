@@ -20,7 +20,6 @@
         private string modelFile;
         private string modelMaskFile;
         private string sceneFile;
-        private Mat maskedModel;
         private ImreadModes imageMode = ImreadModes.Color;
         private BitmapSource overlay;
         private IReadOnlyList<KeyPoint> modelKeyPoints = new KeyPoint[0];
@@ -122,8 +121,6 @@
             }
         }
 
-        public BitmapSource MaskedModelSource => this.MaskedModel?.ToBitmapSource();
-
         public BitmapSource Overlay
         {
             get => this.overlay;
@@ -220,26 +217,6 @@
             }
         }
 
-        private Mat MaskedModel
-        {
-            get
-            {
-                return this.maskedModel;
-            }
-
-            set
-            {
-                if (ReferenceEquals(value, this.maskedModel))
-                {
-                    return;
-                }
-
-                this.maskedModel = value;
-                this.OnPropertyChanged();
-                this.OnPropertyChanged(nameof(this.MaskedModelSource));
-            }
-        }
-
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -274,41 +251,6 @@
 
         private void Update()
         {
-            if (!string.IsNullOrEmpty(this.modelFile))
-            {
-                if (string.IsNullOrEmpty(this.modelMaskFile))
-                {
-                    this.maskedModel?.Dispose();
-                    this.MaskedModel = new Mat(this.modelFile);
-                }
-                else
-                {
-                    using (var temp = new Mat(this.modelFile))
-                    {
-                        using (var mask = new Mat(this.modelMaskFile))
-                        {
-                            this.maskedModel.Dispose();
-                            this.maskedModel = temp.Overlay();
-                            temp.CopyTo(this.maskedModel, mask);
-                            for (var r = 0; r < this.maskedModel.Rows; r++)
-                            {
-                                for (var c = 0; c < this.maskedModel.Cols; c++)
-                                {
-                                    this.maskedModel.Set(
-                                        r,
-                                        c,
-                                        this.maskedModel.At<int>(r, c) == 0
-                                            ? new Vec4b(0, 0, 0, 0)
-                                            : this.maskedModel.At<Vec4b>(r, c));
-                                }
-                            }
-
-                            this.OnPropertyChanged(nameof(this.MaskedModelSource));
-                        }
-                    }
-                }
-            }
-
             if (string.IsNullOrEmpty(this.modelFile) ||
                 string.IsNullOrEmpty(this.sceneFile))
             {
@@ -332,64 +274,29 @@
                             {
                                 surf.DetectAndCompute(model, mask, out KeyPoint[] mkp, md);
                                 this.ModelKeyPoints = mkp;
-                                using (var image = new Mat(this.sceneFile, this.imageMode))
+                                using (var scene = new Mat(this.sceneFile, this.imageMode))
                                 {
                                     using (var sd = new Mat())
                                     {
-                                        surf.DetectAndCompute(image, null, out KeyPoint[] skp, sd);
+                                        surf.DetectAndCompute(scene, null, out KeyPoint[] skp, sd);
                                         this.SceneKeyPoints = skp;
                                         using (var matcher = this.BfMatcher.Create())
                                         {
                                             this.Matches = matcher.Match(sd, md);
                                             var goodMatches = this.matches.Where(m => m.Distance < 0.2).ToArray();
-                                            using (var srcPoints = InputArray.Create(goodMatches.Select(m => mkp[m.TrainIdx].Pt)))
-                                            {
-                                                using (var dstPoints = InputArray.Create(goodMatches.Select(m => skp[m.QueryIdx].Pt)))
-                                                {
-                                                    // http://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#decomposehomographymat
-                                                    using (var homo = Cv2.FindHomography(
-                                                        srcPoints,
-                                                        dstPoints,
-                                                        this.homographyMethod))
-                                                    {
-                                                        ////using (var overlay = image.Overlay())
-                                                        ////{
-                                                        ////    DrawBox(template, homo, overlay);
-                                                        ////    this.Result.Source = overlay.ToBitmapSource();
-                                                        ////}
+                                            this.FindAndApplyHomography(
+                                                goodMatches.Select(m => mkp[m.TrainIdx].Pt),
+                                                goodMatches.Select(m => skp[m.QueryIdx].Pt),
+                                                model,
+                                                mask,
+                                                scene);
 
-                                                        using (var tmp1 = image.Overlay())
-                                                        {
-                                                            using (var masked = model.Clone())
-                                                            {
-                                                                //if (mask != null)
-                                                                //{
-                                                                //    model.CopyTo(masked, mask);
-                                                                //}
-
-                                                                Cv2.WarpPerspective(model, tmp1, homo, tmp1.Size());
-                                                                using (var tmp2 = tmp1.Overlay())
-                                                                {
-                                                                    for (var r = 0; r < tmp1.Rows; r++)
-                                                                    {
-                                                                        for (var c = 0; c < tmp1.Cols; c++)
-                                                                        {
-                                                                            tmp2.Set(
-                                                                                r,
-                                                                                c,
-                                                                                tmp1.At<int>(r, c) == 0
-                                                                                    ? new Vec4b(0, 0, 0, 0)
-                                                                                    : new Vec4b(0, 0, 255, 150));
-                                                                        }
-                                                                    }
-
-                                                                    this.Overlay = tmp2.ToBitmapSource();
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            ////this.FindAndApplyAffine(
+                                            ////    goodMatches.Select(m => mkp[m.TrainIdx].Pt),
+                                            ////    goodMatches.Select(m => skp[m.QueryIdx].Pt),
+                                            ////    model,
+                                            ////    mask,
+                                            ////    scene);
                                         }
                                     }
                                 }
@@ -401,6 +308,65 @@
             catch (Exception e)
             {
                 this.Exception = e;
+            }
+        }
+
+        private void FindAndApplyAffine(IEnumerable<Point2f> srcPoints, IEnumerable<Point2f> dstPoints, Mat model, Mat mask, Mat scene)
+        {
+            using (var src = InputArray.Create(srcPoints))
+            {
+                using (var dst = InputArray.Create(dstPoints))
+                {
+                    //// http://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#decomposehomographymat
+                    using (var transform = Cv2.GetAffineTransform(src, dst))
+                    {
+                        using (var tmp = scene.Overlay())
+                        {
+                            if (mask != null)
+                            {
+                                model.CopyTo(model, mask);
+                                Cv2.WarpAffine(model, tmp, transform, tmp.Size());
+                            }
+                            else
+                            {
+                                Cv2.WarpAffine(model, tmp, transform, tmp.Size());
+                            }
+
+                            this.Overlay = tmp.ToBitmapSource();
+                        }
+                    }
+                }
+            }
+        }
+
+        private void FindAndApplyHomography(IEnumerable<Point2f> srcPoints, IEnumerable<Point2f> dstPoints, Mat model, Mat mask, Mat scene)
+        {
+            using (var src = InputArray.Create(srcPoints))
+            {
+                using (var dst = InputArray.Create(dstPoints))
+                {
+                    //// http://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#decomposehomographymat
+                    using (var homo = Cv2.FindHomography(
+                        src,
+                        dst,
+                        this.homographyMethod))
+                    {
+                        using (var tmp = scene.Overlay())
+                        {
+                            if (mask != null)
+                            {
+                                model.CopyTo(model, mask);
+                                Cv2.WarpPerspective(model, tmp, homo, tmp.Size());
+                            }
+                            else
+                            {
+                                Cv2.WarpPerspective(model, tmp, homo, tmp.Size());
+                            }
+
+                            this.Overlay = tmp.ToBitmapSource();
+                        }
+                    }
+                }
             }
         }
     }

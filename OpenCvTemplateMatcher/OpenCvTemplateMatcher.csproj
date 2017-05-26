@@ -42,11 +42,14 @@
     <Reference Include="Gu.Reactive, Version=3.3.1.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Gu.Reactive.3.3.1.1\lib\net45\Gu.Reactive.dll</HintPath>
     </Reference>
+    <Reference Include="Gu.Wpf.Geometry, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Gu.Wpf.Geometry.1.2.0.0\lib\net45\Gu.Wpf.Geometry.dll</HintPath>
+    </Reference>
     <Reference Include="Gu.Wpf.Reactive, Version=3.3.1.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Gu.Wpf.Reactive.3.3.1.1\lib\net45\Gu.Wpf.Reactive.dll</HintPath>
     </Reference>
-    <Reference Include="Gu.Wpf.ToolTips, Version=0.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Gu.Wpf.ToolTips.0.2.0.0\lib\net45\Gu.Wpf.ToolTips.dll</HintPath>
+    <Reference Include="Gu.Wpf.ToolTips, Version=0.2.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Gu.Wpf.ToolTips.0.2.0.1\lib\net45\Gu.Wpf.ToolTips.dll</HintPath>
     </Reference>
     <Reference Include="Ookii.Dialogs.Wpf, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0c15020868fd6249, processorArchitecture=MSIL">
       <HintPath>..\packages\Ookii.Dialogs.1.0\lib\net35\Ookii.Dialogs.Wpf.dll</HintPath>
@@ -78,9 +81,10 @@
     <Reference Include="System.Reactive.PlatformServices, Version=3.0.1000.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Reactive.PlatformServices.3.1.1\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Windows.Threading, Version=3.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Reactive.Windows.Threading.3.0.0\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
+    <Reference Include="System.Reactive.Windows.Threading, Version=3.0.1000.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reactive.Windows.Threading.3.1.1\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
