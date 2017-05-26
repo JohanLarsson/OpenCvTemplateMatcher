@@ -20,12 +20,14 @@
         private string modelFile;
         private string modelMaskFile;
         private string sceneFile;
+        private Mat maskedModel;
         private ImreadModes imageMode = ImreadModes.Color;
         private BitmapSource overlay;
         private IReadOnlyList<KeyPoint> modelKeyPoints = new KeyPoint[0];
         private IReadOnlyList<KeyPoint> sceneKeyPoints = new KeyPoint[0];
         private IReadOnlyList<DMatch> matches = new DMatch[0];
         private HomographyMethods homographyMethod = HomographyMethods.None;
+        private Exception exception;
 
         public ViewModel()
         {
@@ -120,6 +122,8 @@
             }
         }
 
+        public BitmapSource MaskedModelSource => this.MaskedModel?.ToBitmapSource();
+
         public BitmapSource Overlay
         {
             get => this.overlay;
@@ -200,6 +204,42 @@
             }
         }
 
+        public Exception Exception
+        {
+            get => this.exception;
+
+            set
+            {
+                if (ReferenceEquals(value, this.exception))
+                {
+                    return;
+                }
+
+                this.exception = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        private Mat MaskedModel
+        {
+            get
+            {
+                return this.maskedModel;
+            }
+
+            set
+            {
+                if (ReferenceEquals(value, this.maskedModel))
+                {
+                    return;
+                }
+
+                this.maskedModel = value;
+                this.OnPropertyChanged();
+                this.OnPropertyChanged(nameof(this.MaskedModelSource));
+            }
+        }
+
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -234,6 +274,41 @@
 
         private void Update()
         {
+            if (!string.IsNullOrEmpty(this.modelFile))
+            {
+                if (string.IsNullOrEmpty(this.modelMaskFile))
+                {
+                    this.maskedModel?.Dispose();
+                    this.MaskedModel = new Mat(this.modelFile);
+                }
+                else
+                {
+                    using (var temp = new Mat(this.modelFile))
+                    {
+                        using (var mask = new Mat(this.modelMaskFile))
+                        {
+                            this.maskedModel.Dispose();
+                            this.maskedModel = temp.Overlay();
+                            temp.CopyTo(this.maskedModel, mask);
+                            for (var r = 0; r < this.maskedModel.Rows; r++)
+                            {
+                                for (var c = 0; c < this.maskedModel.Cols; c++)
+                                {
+                                    this.maskedModel.Set(
+                                        r,
+                                        c,
+                                        this.maskedModel.At<int>(r, c) == 0
+                                            ? new Vec4b(0, 0, 0, 0)
+                                            : this.maskedModel.At<Vec4b>(r, c));
+                                }
+                            }
+
+                            this.OnPropertyChanged(nameof(this.MaskedModelSource));
+                        }
+                    }
+                }
+            }
+
             if (string.IsNullOrEmpty(this.modelFile) ||
                 string.IsNullOrEmpty(this.sceneFile))
             {
@@ -244,64 +319,73 @@
                 return;
             }
 
-            using (var surf = this.Surf.Create())
+            try
             {
-                using (var template = new Mat(this.modelFile, this.imageMode))
+                this.Exception = null;
+                using (var surf = this.Surf.Create())
                 {
-                    using (var md = new Mat())
+                    using (var model = new Mat(this.modelFile, this.imageMode))
                     {
-                        using (var mask = File.Exists(this.modelMaskFile) ? new Mat(this.modelMaskFile, ImreadModes.GrayScale) : null)
+                        using (var md = new Mat())
                         {
-
-                            surf.DetectAndCompute(template, mask, out KeyPoint[] mkp, md);
-                            this.ModelKeyPoints = mkp;
-                            using (var image = new Mat(this.sceneFile, this.imageMode))
+                            using (var mask = File.Exists(this.modelMaskFile) ? new Mat(this.modelMaskFile, ImreadModes.GrayScale) : null)
                             {
-                                using (var sd = new Mat())
+                                surf.DetectAndCompute(model, mask, out KeyPoint[] mkp, md);
+                                this.ModelKeyPoints = mkp;
+                                using (var image = new Mat(this.sceneFile, this.imageMode))
                                 {
-                                    surf.DetectAndCompute(image, null, out KeyPoint[] skp, sd);
-                                    this.SceneKeyPoints = skp;
-                                    using (var matcher = this.BfMatcher.Create())
+                                    using (var sd = new Mat())
                                     {
-                                        this.Matches = matcher.Match(sd, md);
-                                        //var goodMatches = ms;//.Where(m => m.Distance < 0.2).ToArray();
-                                        using (var srcPoints =
-                                            InputArray.Create(this.matches.Select(m => mkp[m.TrainIdx].Pt)))
+                                        surf.DetectAndCompute(image, null, out KeyPoint[] skp, sd);
+                                        this.SceneKeyPoints = skp;
+                                        using (var matcher = this.BfMatcher.Create())
                                         {
-                                            using (var dstPoints =
-                                                InputArray.Create(this.matches.Select(m => skp[m.QueryIdx].Pt)))
+                                            this.Matches = matcher.Match(sd, md);
+                                            var goodMatches = this.matches.Where(m => m.Distance < 0.2).ToArray();
+                                            using (var srcPoints = InputArray.Create(goodMatches.Select(m => mkp[m.TrainIdx].Pt)))
                                             {
-                                                using (var homo = Cv2.FindHomography(
-                                                    srcPoints,
-                                                    dstPoints,
-                                                    this.homographyMethod))
+                                                using (var dstPoints = InputArray.Create(goodMatches.Select(m => skp[m.QueryIdx].Pt)))
                                                 {
-                                                    ////using (var overlay = image.Overlay())
-                                                    ////{
-                                                    ////    DrawBox(template, homo, overlay);
-                                                    ////    this.Result.Source = overlay.ToBitmapSource();
-                                                    ////}
-
-                                                    using (var tmp1 = image.Overlay())
+                                                    // http://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#decomposehomographymat
+                                                    using (var homo = Cv2.FindHomography(
+                                                        srcPoints,
+                                                        dstPoints,
+                                                        this.homographyMethod))
                                                     {
-                                                        //Cv2.BitwiseNot(template, template);
-                                                        Cv2.WarpPerspective(template, tmp1, homo, tmp1.Size());
-                                                        using (var tmp2 = tmp1.Overlay())
+                                                        ////using (var overlay = image.Overlay())
+                                                        ////{
+                                                        ////    DrawBox(template, homo, overlay);
+                                                        ////    this.Result.Source = overlay.ToBitmapSource();
+                                                        ////}
+
+                                                        using (var tmp1 = image.Overlay())
                                                         {
-                                                            for (var r = 0; r < tmp1.Rows; r++)
+                                                            using (var masked = model.Clone())
                                                             {
-                                                                for (var c = 0; c < tmp1.Cols; c++)
+                                                                //if (mask != null)
+                                                                //{
+                                                                //    model.CopyTo(masked, mask);
+                                                                //}
+
+                                                                Cv2.WarpPerspective(model, tmp1, homo, tmp1.Size());
+                                                                using (var tmp2 = tmp1.Overlay())
                                                                 {
-                                                                    tmp2.Set(
-                                                                        r,
-                                                                        c,
-                                                                        tmp1.At<int>(r, c) == 0
-                                                                            ? new Vec4b(0, 0, 0, 0)
-                                                                            : new Vec4b(0, 0, 255, 150));
+                                                                    for (var r = 0; r < tmp1.Rows; r++)
+                                                                    {
+                                                                        for (var c = 0; c < tmp1.Cols; c++)
+                                                                        {
+                                                                            tmp2.Set(
+                                                                                r,
+                                                                                c,
+                                                                                tmp1.At<int>(r, c) == 0
+                                                                                    ? new Vec4b(0, 0, 0, 0)
+                                                                                    : new Vec4b(0, 0, 255, 150));
+                                                                        }
+                                                                    }
+
+                                                                    this.Overlay = tmp2.ToBitmapSource();
                                                                 }
                                                             }
-
-                                                            this.Overlay = tmp2.ToBitmapSource();
                                                         }
                                                     }
                                                 }
@@ -313,6 +397,10 @@
                         }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                this.Exception = e;
             }
         }
     }

@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:openCvTemplateMatcher="clr-namespace:OpenCvTemplateMatcher"
         xmlns:openCvSharp="clr-namespace:OpenCvSharp;assembly=OpenCvSharp"
+        xmlns:openCvTemplateMatcher="clr-namespace:OpenCvTemplateMatcher"
         xmlns:reactive="http://Gu.com/Reactive"
         Title="MainWindow"
         Width="525"
@@ -37,6 +37,8 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
                 <GroupBox Header="SURF">
                     <Grid>
@@ -51,24 +53,44 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="HessianThreshold" />
-                        <TextBox  Grid.Row="0" Grid.Column="1" Text="{Binding Surf.HessianThreshold}" />
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="HessianThreshold" />
+                        <TextBox Grid.Row="0"
+                                 Grid.Column="1"
+                                 Text="{Binding Surf.HessianThreshold}" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="OctaveLayers" />
-                        <TextBox  Grid.Row="1" Grid.Column="1" Text="{Binding Surf.OctaveLayers}" />
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="OctaveLayers" />
+                        <TextBox Grid.Row="1"
+                                 Grid.Column="1"
+                                 Text="{Binding Surf.OctaveLayers}" />
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Octaves" />
-                        <TextBox  Grid.Row="2" Grid.Column="1" Text="{Binding Surf.Octaves}" />
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Text="Octaves" />
+                        <TextBox Grid.Row="2"
+                                 Grid.Column="1"
+                                 Text="{Binding Surf.Octaves}" />
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Extended" />
-                        <CheckBox  Grid.Row="3" Grid.Column="1" IsChecked="{Binding Surf.Extended}" />
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="0"
+                                   Text="Extended" />
+                        <CheckBox Grid.Row="3"
+                                  Grid.Column="1"
+                                  IsChecked="{Binding Surf.Extended}" />
 
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Upright" />
-                        <CheckBox  Grid.Row="4" Grid.Column="1" IsChecked="{Binding Surf.Upright}" />
+                        <TextBlock Grid.Row="4"
+                                   Grid.Column="0"
+                                   Text="Upright" />
+                        <CheckBox Grid.Row="4"
+                                  Grid.Column="1"
+                                  IsChecked="{Binding Surf.Upright}" />
                     </Grid>
                 </GroupBox>
 
-                <GroupBox Header="BFMatcher" Grid.Row="1">
+                <GroupBox Grid.Row="1" Header="BFMatcher">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -78,15 +100,24 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="NormType" />
-                        <ComboBox  Grid.Row="0" Grid.Column="1" SelectedItem="{Binding BfMatcher.NormType}" ItemsSource="{reactive:EnumValuesFor {x:Type openCvSharp:NormTypes}}"/>
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="NormType" />
+                        <ComboBox Grid.Row="0"
+                                  Grid.Column="1"
+                                  ItemsSource="{reactive:EnumValuesFor {x:Type openCvSharp:NormTypes}}"
+                                  SelectedItem="{Binding BfMatcher.NormType}" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="CrossCheck" />
-                        <CheckBox  Grid.Row="1" Grid.Column="1" IsChecked="{Binding BfMatcher.CrossCheck}" />
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="CrossCheck" />
+                        <CheckBox Grid.Row="1"
+                                  Grid.Column="1"
+                                  IsChecked="{Binding BfMatcher.CrossCheck}" />
                     </Grid>
                 </GroupBox>
 
-                <GroupBox Header="Other" Grid.Row="2">
+                <GroupBox Grid.Row="2" Header="Other">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -96,13 +127,40 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="HomographyMethod" />
-                        <ComboBox  Grid.Row="0" Grid.Column="1" SelectedItem="{Binding HomographyMethod}" ItemsSource="{reactive:EnumValuesFor {x:Type openCvSharp:HomographyMethods}}"/>
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="HomographyMethod" />
+                        <ComboBox Grid.Row="0"
+                                  Grid.Column="1"
+                                  ItemsSource="{reactive:EnumValuesFor {x:Type openCvSharp:HomographyMethods}}"
+                                  SelectedItem="{Binding HomographyMethod}" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="ImageMode" />
-                        <ComboBox  Grid.Row="1" Grid.Column="1" SelectedItem="{Binding ImageMode}" ItemsSource="{reactive:EnumValuesFor {x:Type openCvSharp:ImreadModes}}"/>
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="ImageMode" />
+                        <ComboBox Grid.Row="1"
+                                  Grid.Column="1"
+                                  ItemsSource="{reactive:EnumValuesFor {x:Type openCvSharp:ImreadModes}}"
+                                  SelectedItem="{Binding ImageMode}" />
                     </Grid>
                 </GroupBox>
+                <!--<GroupBox Grid.Row="3" Header="ModelKeyPoints">
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding ModelKeyPoints}" />
+                    </ScrollViewer>
+                </GroupBox>
+
+                <GroupBox Grid.Row="4" Header="SceneKeyPoints">
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding SceneKeyPoints}" />
+                    </ScrollViewer>
+                </GroupBox>
+
+                <GroupBox Grid.Row="5" Header="Matches">
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Matches}" />
+                    </ScrollViewer>
+                </GroupBox>-->
             </Grid>
             <Grid Grid.Column="1">
                 <Grid.ColumnDefinitions>
@@ -110,6 +168,7 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Grid>
+                    <!--<Image Source="{Binding MaskedModelSource}" />-->
                     <Image Source="{Binding ModelFile}" />
                     <Image Source="{Binding ModelMaskFile}" />
                 </Grid>
