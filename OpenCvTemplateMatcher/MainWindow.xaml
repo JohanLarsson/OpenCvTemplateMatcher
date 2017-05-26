@@ -22,9 +22,9 @@
         </Grid.RowDefinitions>
         <Menu>
             <MenuItem Header="_File">
-                <MenuItem Command="{Binding OpenModelCommand}" Header="Open model" />
-                <MenuItem Command="{Binding OpenModelMaskCommand}" Header="Open mask" />
-                <MenuItem Command="{Binding OpenSceneCommand}" Header="Open scene" />
+                <MenuItem Command="{Binding Model.OpenModelCommand}" Header="Open model" />
+                <MenuItem Command="{Binding Model.OpenModelMaskCommand}" Header="Open mask" />
+                <MenuItem Command="{Binding Scene.OpenSceneCommand}" Header="Open scene" />
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1">
@@ -169,9 +169,8 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Grid>
-                    <!--<Image Source="{Binding MaskedModelSource}" />-->
-                    <Image Source="{Binding ModelFile}" />
-                    <Image Source="{Binding ModelMaskFile}">
+                    <Image Source="{Binding Model.ImageFileName}" />
+                    <Image Source="{Binding Model.MaskFileName}">
                         <Image.Effect>
                             <effects:MaskEffect />
                         </Image.Effect>
@@ -182,8 +181,8 @@
                         <RowDefinition />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Image Opacity="{Binding ElementName=SceneOpacity, Path=Value}" Source="{Binding SceneFile}" />
-                    <Image Opacity="{Binding ElementName=OverlayOpacity, Path=Value}" Source="{Binding Overlay}">
+                    <Image Grid.Row="0" Opacity="{Binding ElementName=SceneOpacity, Path=Value}" Source="{Binding Scene.FileName}" />
+                    <Image Grid.Row="0" Opacity="{Binding ElementName=OverlayOpacity, Path=Value}" Source="{Binding Overlay}">
                         <Image.Effect>
                             <effects:MaskEffect />
                         </Image.Effect>

@@ -1,16 +1,24 @@
 namespace OpenCvTemplateMatcher
 {
+    using System;
     using System.ComponentModel;
     using System.Runtime.CompilerServices;
     using OpenCvSharp.XFeatures2D;
 
-    public class SurfViewModel : INotifyPropertyChanged
+    public sealed class SurfViewModel : INotifyPropertyChanged, IDisposable
     {
         private int hessianThreshold = 1000;
         private int octaves = 4;
         private int octaveLayers = 2;
         private bool extended = true;
         private bool upright;
+        private SURF surf;
+        private bool disposed;
+
+        public SurfViewModel()
+        {
+            this.UpdateSurf();
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -43,6 +51,7 @@ namespace OpenCvTemplateMatcher
 
                 this.octaves = value;
                 this.OnPropertyChanged();
+                this.UpdateSurf();
             }
         }
 
@@ -59,6 +68,7 @@ namespace OpenCvTemplateMatcher
 
                 this.octaveLayers = value;
                 this.OnPropertyChanged();
+                this.UpdateSurf();
             }
         }
 
@@ -75,6 +85,7 @@ namespace OpenCvTemplateMatcher
 
                 this.extended = value;
                 this.OnPropertyChanged();
+                this.UpdateSurf();
             }
         }
 
@@ -91,14 +102,59 @@ namespace OpenCvTemplateMatcher
 
                 this.upright = value;
                 this.OnPropertyChanged();
+                this.UpdateSurf();
             }
         }
 
-        public SURF Create() => SURF.Create(this.hessianThreshold, this.octaves, this.octaveLayers, this.extended, this.upright);
+        public SURF Surf
+        {
+            get => this.surf;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+            private set
+            {
+                if (ReferenceEquals(value, this.surf))
+                {
+                    return;
+                }
+
+                this.surf = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public void Dispose()
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            this.disposed = true;
+            this.surf?.Dispose();
+        }
+
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (this.disposed)
+            {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+        }
+
+        private void UpdateSurf()
+        {
+            this.surf?.Dispose();
+            this.Surf = SURF.Create(
+                this.hessianThreshold,
+                this.octaves,
+                this.octaveLayers,
+                this.extended,
+                this.upright);
         }
     }
 }

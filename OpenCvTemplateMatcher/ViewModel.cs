@@ -5,55 +5,44 @@
     using System.ComponentModel;
     using System.IO;
     using System.Linq;
+    using System.Reactive.Concurrency;
     using System.Reactive.Linq;
     using System.Runtime.CompilerServices;
-    using System.Windows.Input;
     using System.Windows.Media.Imaging;
     using Gu.Reactive;
-    using Gu.Wpf.Reactive;
-    using Ookii.Dialogs.Wpf;
     using OpenCvSharp;
     using OpenCvSharp.Extensions;
 
-    public class ViewModel : INotifyPropertyChanged
+    public sealed class ViewModel : INotifyPropertyChanged, IDisposable
     {
-        private string modelFile;
-        private string modelMaskFile;
-        private string sceneFile;
         private ImreadModes imageMode = ImreadModes.Color;
         private BitmapSource overlay;
-        private IReadOnlyList<KeyPoint> modelKeyPoints = new KeyPoint[0];
-        private IReadOnlyList<KeyPoint> sceneKeyPoints = new KeyPoint[0];
         private IReadOnlyList<DMatch> matches = new DMatch[0];
         private HomographyMethods homographyMethod = HomographyMethods.None;
         private Exception exception;
+        private bool disposed;
 
         public ViewModel()
         {
-            this.OpenModelCommand = new RelayCommand(this.OpenModel);
-            this.OpenModelMaskCommand = new RelayCommand(this.OpenModelMask);
-            this.OpenSceneCommand = new RelayCommand(this.OpenScene);
-
+            this.Model = new ModelViewModel(this);
+            this.Scene = new SceneViewModel(this);
             Observable.Merge(
-                          this.Surf.ObservePropertyChangedSlim(),
-                          this.BfMatcher.ObservePropertyChangedSlim(),
-                          this.ObservePropertyChangedSlim(nameof(this.ModelFile)),
-                          this.ObservePropertyChangedSlim(nameof(this.ModelMaskFile)),
-                          this.ObservePropertyChangedSlim(nameof(this.SceneFile)),
-                          this.ObservePropertyChangedSlim(nameof(this.ImageMode)),
+                          this.Surf.ObservePropertyChangedSlim(x => x.Surf),
+                          this.BfMatcher.ObservePropertyChangedSlim(x => x.Matcher),
+                          this.Model.ObservePropertyChangedSlim(x => x.Descriptors),
+                          this.Scene.ObservePropertyChangedSlim(x => x.Descriptors),
                           this.ObservePropertyChangedSlim(nameof(this.HomographyMethod)))
+                      .Throttle(TimeSpan.FromMilliseconds(10), DispatcherScheduler.Current)
                       .Subscribe(_ => this.Update());
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ICommand OpenModelCommand { get; }
-
-        public ICommand OpenModelMaskCommand { get; }
-
-        public ICommand OpenSceneCommand { get; }
-
         public SurfViewModel Surf { get; } = new SurfViewModel();
+
+        public ModelViewModel Model { get; }
+
+        public SceneViewModel Scene { get; }
 
         public BfMatcherViewModel BfMatcher { get; } = new BfMatcherViewModel();
 
@@ -73,54 +62,6 @@
             }
         }
 
-        public string ModelFile
-        {
-            get => this.modelFile;
-
-            set
-            {
-                if (value == this.modelFile)
-                {
-                    return;
-                }
-
-                this.modelFile = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        public string ModelMaskFile
-        {
-            get => this.modelMaskFile;
-
-            set
-            {
-                if (value == this.modelMaskFile)
-                {
-                    return;
-                }
-
-                this.modelMaskFile = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        public string SceneFile
-        {
-            get => this.sceneFile;
-
-            set
-            {
-                if (value == this.sceneFile)
-                {
-                    return;
-                }
-
-                this.sceneFile = value;
-                this.OnPropertyChanged();
-            }
-        }
-
         public BitmapSource Overlay
         {
             get => this.overlay;
@@ -133,38 +74,6 @@
                 }
 
                 this.overlay = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        public IReadOnlyList<KeyPoint> ModelKeyPoints
-        {
-            get => this.modelKeyPoints;
-
-            private set
-            {
-                if (ReferenceEquals(value, this.modelKeyPoints))
-                {
-                    return;
-                }
-
-                this.modelKeyPoints = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        public IReadOnlyList<KeyPoint> SceneKeyPoints
-        {
-            get => this.sceneKeyPoints;
-
-            private set
-            {
-                if (ReferenceEquals(value, this.sceneKeyPoints))
-                {
-                    return;
-                }
-
-                this.sceneKeyPoints = value;
                 this.OnPropertyChanged();
             }
         }
@@ -217,46 +126,39 @@
             }
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        public void Dispose()
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            this.disposed = true;
+            this.Surf.Dispose();
+            this.BfMatcher.Dispose();
+            this.Model.Dispose();
+            this.Scene.Dispose();
+        }
+
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private void OpenModel()
+        private void ThrowIfDisposed()
         {
-            var dialog = new VistaOpenFileDialog();
-            if (dialog.ShowDialog() == true)
+            if (this.disposed)
             {
-                this.ModelFile = dialog.FileName;
-            }
-        }
-
-        private void OpenModelMask()
-        {
-            var dialog = new VistaOpenFileDialog();
-            if (dialog.ShowDialog() == true)
-            {
-                this.ModelMaskFile = dialog.FileName;
-            }
-        }
-
-        private void OpenScene()
-        {
-            var dialog = new VistaOpenFileDialog();
-            if (dialog.ShowDialog() == true)
-            {
-                this.SceneFile = dialog.FileName;
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
         }
 
         private void Update()
         {
-            if (string.IsNullOrEmpty(this.modelFile) ||
-                string.IsNullOrEmpty(this.sceneFile))
+            if (this.Model.Descriptors == null ||
+                this.Scene.Descriptors == null)
             {
                 this.Overlay = null;
-                this.ModelKeyPoints = new KeyPoint[0];
-                this.SceneKeyPoints = new KeyPoint[0];
                 this.Matches = new DMatch[0];
                 return;
             }
@@ -264,46 +166,15 @@
             try
             {
                 this.Exception = null;
-                using (var surf = this.Surf.Create())
-                {
-                    using (var model = new Mat(this.modelFile, this.imageMode))
-                    {
-                        using (var md = new Mat())
-                        {
-                            using (var mask = File.Exists(this.modelMaskFile) ? new Mat(this.modelMaskFile, ImreadModes.GrayScale) : null)
-                            {
-                                surf.DetectAndCompute(model, mask, out KeyPoint[] mkp, md);
-                                this.ModelKeyPoints = mkp;
-                                using (var scene = new Mat(this.sceneFile, this.imageMode))
-                                {
-                                    using (var sd = new Mat())
-                                    {
-                                        surf.DetectAndCompute(scene, null, out KeyPoint[] skp, sd);
-                                        this.SceneKeyPoints = skp;
-                                        using (var matcher = this.BfMatcher.Create())
-                                        {
-                                            this.Matches = matcher.Match(sd, md);
-                                            var goodMatches = this.matches.Where(m => m.Distance < 0.2).ToArray();
-                                            this.FindAndApplyHomography(
-                                                goodMatches.Select(m => mkp[m.TrainIdx].Pt),
-                                                goodMatches.Select(m => skp[m.QueryIdx].Pt),
-                                                model,
-                                                mask,
-                                                scene);
+                this.Matches = this.BfMatcher.Matcher.Match(this.Scene.Descriptors, this.Model.Descriptors);
+                var goodMatches = this.matches.Where(m => m.Distance < 0.2).ToArray();
 
-                                            ////this.FindAndApplyAffine(
-                                            ////    goodMatches.Select(m => mkp[m.TrainIdx].Pt),
-                                            ////    goodMatches.Select(m => skp[m.QueryIdx].Pt),
-                                            ////    model,
-                                            ////    mask,
-                                            ////    scene);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                this.FindAndApplyHomography(
+                    goodMatches.Select(m => this.Model.KeyPoints[m.TrainIdx].Pt),
+                    goodMatches.Select(m => this.Scene.KeyPoints[m.QueryIdx].Pt),
+                    this.Model.Image,
+                    this.Model.Mask,
+                    this.Scene.Image);
             }
             catch (Exception e)
             {
