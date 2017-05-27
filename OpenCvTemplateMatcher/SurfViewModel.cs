@@ -35,6 +35,7 @@ namespace OpenCvTemplateMatcher
 
                 this.hessianThreshold = value;
                 this.OnPropertyChanged();
+                this.UpdateSurf();
             }
         }
 

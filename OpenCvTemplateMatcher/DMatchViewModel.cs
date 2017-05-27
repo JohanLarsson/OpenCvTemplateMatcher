@@ -1,6 +1,5 @@
 ﻿namespace OpenCvTemplateMatcher
 {
-    using System;
     using OpenCvSharp;
 
     public class DMatchViewModel

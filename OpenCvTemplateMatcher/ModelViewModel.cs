@@ -3,8 +3,8 @@
     using System;
     using System.ComponentModel;
     using System.Diagnostics;
-    using System.IO;
     using System.Linq;
+    using System.Reactive.Linq;
     using System.Runtime.CompilerServices;
     using System.Windows.Input;
     using Gu.Reactive;
@@ -21,6 +21,7 @@
         private Mat descriptors;
         private Mat image;
         private Mat mask;
+        private Exception exception;
         private string maskFileName;
         private TimeSpan elapsed;
         private bool disposed;
@@ -30,8 +31,10 @@
             this.viewModel = viewModel;
             this.OpenModelCommand = new RelayCommand(this.OpenModel);
             this.OpenModelMaskCommand = new RelayCommand(this.OpenModelMask);
-            this.disposable = viewModel.ObservePropertyChangedSlim(x => x.ImageMode, signalInitial: false)
-                                       .Subscribe(_ => this.Update());
+            this.disposable = Observable.Merge(
+                    viewModel.ObservePropertyChangedSlim(x => x.ImageMode, signalInitial: false),
+                    viewModel.ObservePropertyChangedSlim(x => x.Surf.Surf, signalInitial: false))
+                                        .Subscribe(_ => this.Update());
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -86,6 +89,22 @@
                 }
 
                 this.mask = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public Exception Exception
+        {
+            get => this.exception;
+
+            private set
+            {
+                if (ReferenceEquals(value, this.exception))
+                {
+                    return;
+                }
+
+                this.exception = value;
                 this.OnPropertyChanged();
             }
         }
@@ -197,6 +216,7 @@
 
         private void Update()
         {
+            this.Exception = null;
             this.descriptors?.Dispose();
             if (this.image == null)
             {
@@ -205,13 +225,20 @@
                 return;
             }
 
-            var ds = new Mat();
-            var sw = Stopwatch.StartNew();
-            this.viewModel.Surf.Surf.DetectAndCompute(this.image, this.mask, out KeyPoint[] kps, ds);
-            this.Elapsed = sw.Elapsed;
-            this.Descriptors = ds;
-            this.KeyPoints.Clear();
-            this.KeyPoints.AddRange(kps.Select(kp => new KeyPointViewModel(kp)));
+            try
+            {
+                var ds = new Mat();
+                var sw = Stopwatch.StartNew();
+                this.viewModel.Surf.Surf.DetectAndCompute(this.image, this.mask, out KeyPoint[] kps, ds);
+                this.Elapsed = sw.Elapsed;
+                this.Descriptors = ds;
+                this.KeyPoints.Clear();
+                this.KeyPoints.AddRange(kps.Select(kp => new KeyPointViewModel(kp)));
+            }
+            catch (Exception e)
+            {
+                this.Exception = e;
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ namespace OpenCvTemplateMatcher
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reactive.Linq;
     using System.Runtime.CompilerServices;
     using System.Windows.Input;
     using Gu.Reactive;
@@ -20,14 +21,17 @@ namespace OpenCvTemplateMatcher
         private Mat image;
         private string fileName;
         private TimeSpan elapsed;
+        private Exception exception;
         private bool disposed;
 
         public SceneViewModel(ViewModel viewModel)
         {
             this.viewModel = viewModel;
             this.OpenSceneCommand = new RelayCommand(this.OpenScene);
-            this.disposable = viewModel.ObservePropertyChangedSlim(x => x.ImageMode, signalInitial: false)
-                     .Subscribe(_ => this.Update());
+            this.disposable = Observable.Merge(
+                    viewModel.ObservePropertyChangedSlim(x => x.ImageMode, signalInitial: false),
+                    viewModel.ObservePropertyChangedSlim(x => x.Surf.Surf, signalInitial: false))
+                .Subscribe(_ => this.Update());
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -80,6 +84,22 @@ namespace OpenCvTemplateMatcher
                 }
 
                 this.elapsed = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public Exception Exception
+        {
+            get => this.exception;
+
+            private set
+            {
+                if (ReferenceEquals(value, this.exception))
+                {
+                    return;
+                }
+
+                this.exception = value;
                 this.OnPropertyChanged();
             }
         }
@@ -143,6 +163,7 @@ namespace OpenCvTemplateMatcher
 
         private void Update()
         {
+            this.Exception = null;
             this.descriptors?.Dispose();
             if (this.image == null)
             {
@@ -151,13 +172,20 @@ namespace OpenCvTemplateMatcher
                 return;
             }
 
-            var ds = new Mat();
-            var sw = Stopwatch.StartNew();
-            this.viewModel.Surf.Surf.DetectAndCompute(this.image, null, out KeyPoint[] kps, ds);
-            this.Elapsed = sw.Elapsed;
-            this.Descriptors = ds;
-            this.KeyPoints.Clear();
-            this.KeyPoints.AddRange(kps.Select(kp => new KeyPointViewModel(kp)));
+            try
+            {
+                var ds = new Mat();
+                var sw = Stopwatch.StartNew();
+                this.viewModel.Surf.Surf.DetectAndCompute(this.image, null, out KeyPoint[] kps, ds);
+                this.Elapsed = sw.Elapsed;
+                this.Descriptors = ds;
+                this.KeyPoints.Clear();
+                this.KeyPoints.AddRange(kps.Select(kp => new KeyPointViewModel(kp)));
+            }
+            catch (Exception e)
+            {
+                this.Exception = e;
+            }
         }
     }
 }

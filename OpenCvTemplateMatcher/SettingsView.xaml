@@ -15,11 +15,10 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition />
-            <RowDefinition />
+            <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <GroupBox Header="SURF">
+        <GroupBox Grid.Row="0" Header="SURF">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -124,7 +123,20 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Grid.Row="3" Header="Exception">
+        <GroupBox Grid.Row="3" Header="Result">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="{Binding OffsetX, StringFormat='X: {0:F1}'}" />
+                <TextBlock Grid.Row="1" Text="{Binding OffsetY, StringFormat='Y: {0:F1}'}" />
+                <TextBlock Grid.Row="2" Text="{Binding Angle, StringFormat='Angle: {0:F1}°'}" />
+            </Grid>
+        </GroupBox>
+        
+        <GroupBox Grid.Row="4" Header="Exception">
             <TextBlock Text="{Binding Exception.Message}" />
         </GroupBox>
     </Grid>

@@ -80,6 +80,5 @@
             <TextBlock Grid.Row="1" Text="{Binding Matches.Count}" />
             <TextBlock Grid.Row="2" Text="{Binding Elapsed.Milliseconds, StringFormat='{}{0} ms'}" />
         </Grid>
-
     </Grid>
 </UserControl>

@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
-    using System.IO;
     using System.Linq;
     using System.Reactive.Concurrency;
     using System.Reactive.Linq;
@@ -20,6 +19,9 @@
         private BitmapSource overlay;
         private HomographyMethods homographyMethod = HomographyMethods.Ransac;
         private Exception exception;
+        private double? offsetX;
+        private double? offsetY;
+        private double? angle;
         private TimeSpan elapsed;
         private bool disposed;
 
@@ -28,7 +30,6 @@
             this.Model = new ModelViewModel(this);
             this.Scene = new SceneViewModel(this);
             Observable.Merge(
-                          this.Surf.ObservePropertyChangedSlim(x => x.Surf),
                           this.BfMatcher.ObservePropertyChangedSlim(x => x.Matcher),
                           this.Model.ObservePropertyChangedSlim(x => x.Descriptors),
                           this.Scene.ObservePropertyChangedSlim(x => x.Descriptors),
@@ -67,10 +68,7 @@
 
         public TimeSpan Elapsed
         {
-            get
-            {
-                return this.elapsed;
-            }
+            get => this.elapsed;
 
             private set
             {
@@ -132,6 +130,54 @@
             }
         }
 
+        public double? OffsetX
+        {
+            get => this.offsetX;
+
+            private set
+            {
+                if (value == this.offsetX)
+                {
+                    return;
+                }
+
+                this.offsetX = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public double? OffsetY
+        {
+            get => this.offsetY;
+
+            private set
+            {
+                if (value == this.offsetY)
+                {
+                    return;
+                }
+
+                this.offsetY = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public double? Angle
+        {
+            get => this.angle;
+
+            private set
+            {
+                if (value == this.angle)
+                {
+                    return;
+                }
+
+                this.angle = value;
+                this.OnPropertyChanged();
+            }
+        }
+
         public void Dispose()
         {
             if (this.disposed)
@@ -162,6 +208,7 @@
         private void Update()
         {
             this.Matches.Clear();
+            this.Exception = null;
             if (this.Model.Descriptors == null ||
                 this.Scene.Descriptors == null)
             {
@@ -171,7 +218,6 @@
 
             try
             {
-                this.Exception = null;
                 var sw = Stopwatch.StartNew();
                 var matches = this.BfMatcher.Matcher.Match(this.Scene.Descriptors, this.Model.Descriptors);
                 this.Elapsed = sw.Elapsed;
@@ -226,24 +272,34 @@
                 using (var dst = InputArray.Create(dstPoints))
                 {
                     //// http://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#decomposehomographymat
-                    using (var homo = Cv2.FindHomography(
-                        src,
-                        dst,
-                        this.homographyMethod))
+                    using (var homo = Cv2.FindHomography(src, dst, this.homographyMethod))
                     {
-                        using (var tmp = scene.Overlay())
+                        if (homo.Rows == 3 && homo.Cols == 3)
                         {
-                            if (mask != null)
+                            this.OffsetX = homo.At<double>(0, 2);
+                            this.OffsetY = homo.At<double>(1, 2);
+                            this.Angle = Math.Atan2(homo.At<double>(0, 1), homo.At<double>(0, 0)) * 180 / Math.PI;
+                            using (var tmp = scene.Overlay())
                             {
-                                model.CopyTo(model, mask);
-                                Cv2.WarpPerspective(model, tmp, homo, tmp.Size());
-                            }
-                            else
-                            {
-                                Cv2.WarpPerspective(model, tmp, homo, tmp.Size());
-                            }
+                                if (mask != null)
+                                {
+                                    model.CopyTo(model, mask);
+                                    Cv2.WarpPerspective(model, tmp, homo, tmp.Size());
+                                }
+                                else
+                                {
+                                    Cv2.WarpPerspective(model, tmp, homo, tmp.Size());
+                                }
 
-                            this.Overlay = tmp.ToBitmapSource();
+                                this.Overlay = tmp.ToBitmapSource();
+                            }
+                        }
+                        else
+                        {
+                            this.OffsetX = null;
+                            this.OffsetY = null;
+                            this.Angle = null;
+                            this.Overlay = null;
                         }
                     }
                 }
