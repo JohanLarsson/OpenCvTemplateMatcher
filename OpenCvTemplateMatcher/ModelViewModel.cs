@@ -3,6 +3,7 @@
     using System;
     using System.ComponentModel;
     using System.IO;
+    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Windows.Input;
     using Gu.Reactive;
@@ -27,7 +28,7 @@
             this.viewModel = viewModel;
             this.OpenModelCommand = new RelayCommand(this.OpenModel);
             this.OpenModelMaskCommand = new RelayCommand(this.OpenModelMask);
-            this.disposable = viewModel.ObservePropertyChangedSlim(x => x.ImageMode, false)
+            this.disposable = viewModel.ObservePropertyChangedSlim(x => x.ImageMode, signalInitial: false)
                                        .Subscribe(_ => this.Update());
         }
 
@@ -36,8 +37,6 @@
         public ICommand OpenModelCommand { get; }
 
         public ICommand OpenModelMaskCommand { get; }
-
-        public ObservableBatchCollection<KeyPoint> KeyPoints { get; } = new DispatchingCollection<KeyPoint>();
 
         public Mat Descriptors
         {
@@ -119,6 +118,8 @@
             }
         }
 
+        public ObservableBatchCollection<KeyPointViewModel> KeyPoints { get; } = new ObservableBatchCollection<KeyPointViewModel>();
+
         public void Dispose()
         {
             if (this.disposed)
@@ -171,7 +172,7 @@
                 this.mask?.Dispose();
                 this.Mask = string.IsNullOrEmpty(fileName)
                     ? null
-                    : new Mat(this.imageFileName, ImreadModes.GrayScale);
+                    : new Mat(fileName, ImreadModes.GrayScale);
                 this.Update();
             }
         }
@@ -187,10 +188,10 @@
             }
 
             var ds = new Mat();
-            this.viewModel.Surf.Surf.DetectAndCompute(this.image, this.mask, out KeyPoint[] mkp, ds);
+            this.viewModel.Surf.Surf.DetectAndCompute(this.image, this.mask, out KeyPoint[] kps, ds);
             this.Descriptors = ds;
             this.KeyPoints.Clear();
-            this.KeyPoints.AddRange(mkp);
+            this.KeyPoints.AddRange(kps.Select(kp => new KeyPointViewModel(kp)));
         }
     }
 }

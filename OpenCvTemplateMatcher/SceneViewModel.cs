@@ -2,8 +2,8 @@ namespace OpenCvTemplateMatcher
 {
     using System;
     using System.ComponentModel;
+    using System.Linq;
     using System.Runtime.CompilerServices;
-    using System.Windows.Data;
     using System.Windows.Input;
     using Gu.Reactive;
     using Gu.Wpf.Reactive;
@@ -32,7 +32,7 @@ namespace OpenCvTemplateMatcher
 
         public ICommand OpenSceneCommand { get; }
 
-        public ObservableBatchCollection<KeyPoint> KeyPoints { get; } = new DispatchingCollection<KeyPoint>();
+        public ObservableBatchCollection<KeyPointViewModel> KeyPoints { get; } = new ObservableBatchCollection<KeyPointViewModel>();
 
         public Mat Descriptors
         {
@@ -134,10 +134,10 @@ namespace OpenCvTemplateMatcher
             }
 
             var ds = new Mat();
-            this.viewModel.Surf.Surf.DetectAndCompute(this.image, null, out KeyPoint[] mkp, ds);
+            this.viewModel.Surf.Surf.DetectAndCompute(this.image, null, out KeyPoint[] kps, ds);
             this.Descriptors = ds;
             this.KeyPoints.Clear();
-            this.KeyPoints.AddRange(mkp);
+            this.KeyPoints.AddRange(kps.Select(kp => new KeyPointViewModel(kp)));
         }
     }
 }

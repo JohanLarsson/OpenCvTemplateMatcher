@@ -170,8 +170,8 @@
                 var goodMatches = this.matches.Where(m => m.Distance < 0.2).ToArray();
 
                 this.FindAndApplyHomography(
-                    goodMatches.Select(m => this.Model.KeyPoints[m.TrainIdx].Pt),
-                    goodMatches.Select(m => this.Scene.KeyPoints[m.QueryIdx].Pt),
+                    goodMatches.Select(m => this.Model.KeyPoints[m.TrainIdx].KeyPoint.Pt),
+                    goodMatches.Select(m => this.Scene.KeyPoints[m.QueryIdx].KeyPoint.Pt),
                     this.Model.Image,
                     this.Model.Mask,
                     this.Scene.Image);
@@ -241,4 +241,6 @@
             }
         }
     }
+
+    // http://stackoverflow.com/a/6782715/1069200
 }

@@ -98,14 +98,22 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BfMatcherViewModel.cs" />
+    <Compile Include="KeyPointViewModel.cs" />
     <Compile Include="MatExt.cs" />
     <Compile Include="ModelView.xaml.cs">
       <DependentUpon>ModelView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewModel.cs" />
+    <Compile Include="SceneView.xaml.cs">
+      <DependentUpon>SceneView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SceneViewModel.cs" />
+    <Compile Include="SettingsView.xaml.cs">
+      <DependentUpon>SettingsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SurfViewModel.cs" />
     <Compile Include="ViewModel.cs" />
+    <Compile Include="ZoomBorder.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -119,6 +127,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="ModelView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SceneView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SettingsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

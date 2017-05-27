@@ -1,10 +1,10 @@
-﻿<UserControl x:Class="OpenCvTemplateMatcher.ModelView"
+﻿<UserControl x:Class="OpenCvTemplateMatcher.SceneView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:effects="http://gu.se/Geometry"
              xmlns:local="clr-namespace:OpenCvTemplateMatcher"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:effects="http://gu.se/Geometry"
              d:DataContext="{d:DesignInstance local:ViewModel}"
              mc:Ignorable="d">
     <Grid>
@@ -14,22 +14,17 @@
         </Grid.ColumnDefinitions>
         <local:ZoomBorder Grid.Column="0" >
             <Grid>
-                <Image x:Name="Model" Source="{Binding Model.ImageFileName}" />
-                <Image Source="{Binding Model.MaskFileName}">
-                    <Image.Effect>
-                        <effects:MaskEffect />
-                    </Image.Effect>
-                </Image>
+                <Image x:Name="Scene" Source="{Binding Scene.FileName}" />
 
-                <ListBox Width="{Binding ElementName=Model, Path=ActualWidth}"
-                         Height="{Binding ElementName=Model, Path=ActualHeight}"
+                <ListBox Width="{Binding ElementName=Scene, Path=ActualWidth}"
+                         Height="{Binding ElementName=Scene, Path=ActualHeight}"
                          Margin="0"
                          Padding="0"
                          Background="{x:Null}"
                          BorderThickness="0"
                          Focusable="False"
                          IsHitTestVisible="False"
-                         ItemsSource="{Binding Model.KeyPoints}">
+                         ItemsSource="{Binding Scene.KeyPoints}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <Canvas />
@@ -62,7 +57,7 @@
                 </Grid.RowDefinitions>
                 <DataGrid AutoGenerateColumns="False"
                           CanUserAddRows="False"
-                          ItemsSource="{Binding Model.KeyPoints}">
+                          ItemsSource="{Binding Scene.KeyPoints}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Binding="{Binding X, StringFormat='{}{0:F1}'}" Header="X" />
                         <DataGridTextColumn Binding="{Binding Y, StringFormat='{}{0:F1}'}" Header="Y" />
@@ -73,7 +68,7 @@
                         <DataGridTextColumn Binding="{Binding ClassId}" Header="ClassId" />
                     </DataGrid.Columns>
                 </DataGrid>
-                <TextBlock Grid.Row="1" Text="{Binding Model.KeyPoints.Count}" />
+                <TextBlock Grid.Row="1" Text="{Binding Scene.KeyPoints.Count}" />
             </Grid>
         </GroupBox>
     </Grid>
