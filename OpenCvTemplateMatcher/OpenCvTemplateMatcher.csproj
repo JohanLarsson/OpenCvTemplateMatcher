@@ -98,7 +98,11 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BfMatcherViewModel.cs" />
+    <Compile Include="DMatchViewModel.cs" />
     <Compile Include="KeyPointViewModel.cs" />
+    <Compile Include="MatchesView.xaml.cs">
+      <DependentUpon>MatchesView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MatExt.cs" />
     <Compile Include="ModelView.xaml.cs">
       <DependentUpon>ModelView.xaml</DependentUpon>
@@ -126,6 +130,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="MatchesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ModelView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

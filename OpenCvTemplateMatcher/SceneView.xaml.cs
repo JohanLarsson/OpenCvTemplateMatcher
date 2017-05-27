@@ -6,7 +6,7 @@
     {
         public SceneView()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
     }
 }

@@ -2,9 +2,9 @@
 {
     using System.Windows.Controls;
 
-    public partial class SettingsView : UserControl
+    public partial class MatchesView : UserControl
     {
-        public SettingsView()
+        public MatchesView()
         {
             this.InitializeComponent();
         }

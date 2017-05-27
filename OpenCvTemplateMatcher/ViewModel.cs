@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reactive.Concurrency;
@@ -17,9 +18,9 @@
     {
         private ImreadModes imageMode = ImreadModes.Color;
         private BitmapSource overlay;
-        private IReadOnlyList<DMatch> matches = new DMatch[0];
-        private HomographyMethods homographyMethod = HomographyMethods.None;
+        private HomographyMethods homographyMethod = HomographyMethods.Ransac;
         private Exception exception;
+        private TimeSpan elapsed;
         private bool disposed;
 
         public ViewModel()
@@ -46,21 +47,7 @@
 
         public BfMatcherViewModel BfMatcher { get; } = new BfMatcherViewModel();
 
-        public ImreadModes ImageMode
-        {
-            get => this.imageMode;
-
-            set
-            {
-                if (value == this.imageMode)
-                {
-                    return;
-                }
-
-                this.imageMode = value;
-                this.OnPropertyChanged();
-            }
-        }
+        public ObservableBatchCollection<DMatchViewModel> Matches { get; } = new ObservableBatchCollection<DMatchViewModel>();
 
         public BitmapSource Overlay
         {
@@ -78,18 +65,37 @@
             }
         }
 
-        public IReadOnlyList<DMatch> Matches
+        public TimeSpan Elapsed
         {
-            get => this.matches;
+            get
+            {
+                return this.elapsed;
+            }
 
             private set
             {
-                if (ReferenceEquals(value, this.matches))
+                if (value == this.elapsed)
                 {
                     return;
                 }
 
-                this.matches = value;
+                this.elapsed = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public ImreadModes ImageMode
+        {
+            get => this.imageMode;
+
+            set
+            {
+                if (value == this.imageMode)
+                {
+                    return;
+                }
+
+                this.imageMode = value;
                 this.OnPropertyChanged();
             }
         }
@@ -155,19 +161,22 @@
 
         private void Update()
         {
+            this.Matches.Clear();
             if (this.Model.Descriptors == null ||
                 this.Scene.Descriptors == null)
             {
                 this.Overlay = null;
-                this.Matches = new DMatch[0];
                 return;
             }
 
             try
             {
                 this.Exception = null;
-                this.Matches = this.BfMatcher.Matcher.Match(this.Scene.Descriptors, this.Model.Descriptors);
-                var goodMatches = this.matches.Where(m => m.Distance < 0.2).ToArray();
+                var sw = Stopwatch.StartNew();
+                var matches = this.BfMatcher.Matcher.Match(this.Scene.Descriptors, this.Model.Descriptors);
+                this.Elapsed = sw.Elapsed;
+                this.Matches.AddRange(matches.Select(m => new DMatchViewModel(m)));
+                var goodMatches = matches; // .Where(m => m.Distance < 0.2).ToArray();
 
                 this.FindAndApplyHomography(
                     goodMatches.Select(m => this.Model.KeyPoints[m.TrainIdx].KeyPoint.Pt),
@@ -241,6 +250,4 @@
             }
         }
     }
-
-    // http://stackoverflow.com/a/6782715/1069200
 }

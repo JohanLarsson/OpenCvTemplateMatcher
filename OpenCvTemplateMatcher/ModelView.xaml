@@ -9,10 +9,10 @@
              mc:Ignorable="d">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition MinWidth="200"/>
+            <ColumnDefinition MinWidth="200" />
             <ColumnDefinition Width="Auto" MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <local:ZoomBorder Grid.Column="0" >
+        <local:ZoomBorder Grid.Column="0" ClipToBounds="True">
             <Grid>
                 <Image x:Name="Model" Source="{Binding Model.ImageFileName}" />
                 <Image Source="{Binding Model.MaskFileName}">
@@ -59,6 +59,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <DataGrid AutoGenerateColumns="False"
                           CanUserAddRows="False"
@@ -74,6 +75,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
                 <TextBlock Grid.Row="1" Text="{Binding Model.KeyPoints.Count}" />
+                <TextBlock Grid.Row="2" Text="{Binding Model.Elapsed.Milliseconds, StringFormat='{}{0} ms'}" />
             </Grid>
         </GroupBox>
     </Grid>

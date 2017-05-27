@@ -39,52 +39,7 @@
                     <local:SceneView />
                 </TabItem>
                 <TabItem Header="Matches">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Image Grid.Row="0"
-                               Opacity="{Binding ElementName=SceneOpacity, Path=Value}"
-                               Source="{Binding Scene.FileName}" />
-                        <Image Grid.Row="0"
-                               Opacity="{Binding ElementName=OverlayOpacity, Path=Value}"
-                               Source="{Binding Overlay}">
-                            <Image.Effect>
-                                <effects:MaskEffect />
-                            </Image.Effect>
-                        </Image>
-
-                        <Grid Grid.Row="1">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="SceneOpacity" />
-                            <Slider x:Name="SceneOpacity"
-                                    Grid.Row="0"
-                                    Grid.Column="1"
-                                    Maximum="1"
-                                    Minimum="0"
-                                    Value="0.5" />
-
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="0"
-                                       Text="OverlayOpacity" />
-                            <Slider x:Name="OverlayOpacity"
-                                    Grid.Row="1"
-                                    Grid.Column="1"
-                                    Maximum="1"
-                                    Minimum="0"
-                                    Value="0.5" />
-                        </Grid>
-                    </Grid>
+                    <local:MatchesView />
                 </TabItem>
             </TabControl>
         </Grid>

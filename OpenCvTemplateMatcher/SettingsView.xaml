@@ -123,5 +123,9 @@
                           SelectedItem="{Binding ImageMode}" />
             </Grid>
         </GroupBox>
+
+        <GroupBox Grid.Row="3" Header="Exception">
+            <TextBlock Text="{Binding Exception.Message}" />
+        </GroupBox>
     </Grid>
 </UserControl>

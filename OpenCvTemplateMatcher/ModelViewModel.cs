@@ -2,6 +2,7 @@
 {
     using System;
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Runtime.CompilerServices;
@@ -21,6 +22,7 @@
         private Mat image;
         private Mat mask;
         private string maskFileName;
+        private TimeSpan elapsed;
         private bool disposed;
 
         public ModelViewModel(ViewModel viewModel)
@@ -37,6 +39,8 @@
         public ICommand OpenModelCommand { get; }
 
         public ICommand OpenModelMaskCommand { get; }
+
+        public ObservableBatchCollection<KeyPointViewModel> KeyPoints { get; } = new ObservableBatchCollection<KeyPointViewModel>();
 
         public Mat Descriptors
         {
@@ -118,7 +122,21 @@
             }
         }
 
-        public ObservableBatchCollection<KeyPointViewModel> KeyPoints { get; } = new ObservableBatchCollection<KeyPointViewModel>();
+        public TimeSpan Elapsed
+        {
+            get => this.elapsed;
+
+            private set
+            {
+                if (value == this.elapsed)
+                {
+                    return;
+                }
+
+                this.elapsed = value;
+                this.OnPropertyChanged();
+            }
+        }
 
         public void Dispose()
         {
@@ -188,7 +206,9 @@
             }
 
             var ds = new Mat();
+            var sw = Stopwatch.StartNew();
             this.viewModel.Surf.Surf.DetectAndCompute(this.image, this.mask, out KeyPoint[] kps, ds);
+            this.Elapsed = sw.Elapsed;
             this.Descriptors = ds;
             this.KeyPoints.Clear();
             this.KeyPoints.AddRange(kps.Select(kp => new KeyPointViewModel(kp)));

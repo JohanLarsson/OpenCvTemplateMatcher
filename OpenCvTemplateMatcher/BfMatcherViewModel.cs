@@ -7,8 +7,8 @@
 
     public sealed class BfMatcherViewModel : INotifyPropertyChanged, IDisposable
     {
-        private NormTypes normType = NormTypes.L2;
-        private bool crossCheck;
+        private NormTypes normType = NormTypes.L2SQR;
+        private bool crossCheck = true;
         private BFMatcher matcher;
         private bool disposed;
 

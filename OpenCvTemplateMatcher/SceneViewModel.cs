@@ -2,6 +2,7 @@ namespace OpenCvTemplateMatcher
 {
     using System;
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Windows.Input;
@@ -18,13 +19,14 @@ namespace OpenCvTemplateMatcher
         private Mat descriptors;
         private Mat image;
         private string fileName;
+        private TimeSpan elapsed;
         private bool disposed;
 
         public SceneViewModel(ViewModel viewModel)
         {
             this.viewModel = viewModel;
             this.OpenSceneCommand = new RelayCommand(this.OpenScene);
-            this.disposable = viewModel.ObservePropertyChangedSlim(x => x.ImageMode, false)
+            this.disposable = viewModel.ObservePropertyChangedSlim(x => x.ImageMode, signalInitial: false)
                      .Subscribe(_ => this.Update());
         }
 
@@ -62,6 +64,22 @@ namespace OpenCvTemplateMatcher
                 }
 
                 this.image = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public TimeSpan Elapsed
+        {
+            get => this.elapsed;
+
+            private set
+            {
+                if (value == this.elapsed)
+                {
+                    return;
+                }
+
+                this.elapsed = value;
                 this.OnPropertyChanged();
             }
         }
@@ -134,7 +152,9 @@ namespace OpenCvTemplateMatcher
             }
 
             var ds = new Mat();
+            var sw = Stopwatch.StartNew();
             this.viewModel.Surf.Surf.DetectAndCompute(this.image, null, out KeyPoint[] kps, ds);
+            this.Elapsed = sw.Elapsed;
             this.Descriptors = ds;
             this.KeyPoints.Clear();
             this.KeyPoints.AddRange(kps.Select(kp => new KeyPointViewModel(kp)));
