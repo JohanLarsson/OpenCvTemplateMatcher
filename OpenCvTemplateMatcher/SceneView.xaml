@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:OpenCvTemplateMatcher"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:geometry="http://gu.se/Geometry"
              d:DataContext="{d:DesignInstance local:ViewModel}"
              mc:Ignorable="d">
     <Grid>
@@ -11,7 +12,7 @@
             <ColumnDefinition MinWidth="200" />
             <ColumnDefinition Width="Auto" MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <local:ZoomBorder Grid.Column="0">
+        <geometry:Zoombox Grid.Column="0">
             <Grid>
                 <Image x:Name="Scene" Source="{Binding Scene.FileName}" />
 
@@ -46,7 +47,7 @@
                     </ListBox.ItemContainerStyle>
                 </ListBox>
             </Grid>
-        </local:ZoomBorder>
+        </geometry:Zoombox>
 
         <GroupBox Grid.Column="1" Header="KeyPoints">
             <Grid>
@@ -74,3 +75,6 @@
         </GroupBox>
     </Grid>
 </UserControl>
+
+
+

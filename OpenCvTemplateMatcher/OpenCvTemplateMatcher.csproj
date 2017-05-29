@@ -42,8 +42,8 @@
     <Reference Include="Gu.Reactive, Version=3.3.1.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Gu.Reactive.3.3.1.1\lib\net45\Gu.Reactive.dll</HintPath>
     </Reference>
-    <Reference Include="Gu.Wpf.Geometry, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Gu.Wpf.Geometry.1.2.0.0\lib\net45\Gu.Wpf.Geometry.dll</HintPath>
+    <Reference Include="Gu.Wpf.Geometry, Version=1.3.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Gu.Wpf.Geometry.1.3.0.1\lib\net45\Gu.Wpf.Geometry.dll</HintPath>
     </Reference>
     <Reference Include="Gu.Wpf.Reactive, Version=3.3.1.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Gu.Wpf.Reactive.3.3.1.1\lib\net45\Gu.Wpf.Reactive.dll</HintPath>
@@ -117,7 +117,6 @@
     </Compile>
     <Compile Include="SurfViewModel.cs" />
     <Compile Include="ViewModel.cs" />
-    <Compile Include="ZoomBorder.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

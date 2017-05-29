@@ -12,7 +12,7 @@
             <ColumnDefinition MinWidth="200" />
             <ColumnDefinition Width="Auto" MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <local:ZoomBorder Grid.Column="0" ClipToBounds="True">
+        <effects:Zoombox Grid.Column="0" ClipToBounds="True">
             <Grid>
                 <Image x:Name="Model" Source="{Binding Model.ImageFileName}" />
                 <Image Source="{Binding Model.MaskFileName}">
@@ -52,7 +52,7 @@
                     </ListBox.ItemContainerStyle>
                 </ListBox>
             </Grid>
-        </local:ZoomBorder>
+        </effects:Zoombox>
 
         <GroupBox Grid.Column="1" Header="KeyPoints">
             <Grid>
@@ -80,3 +80,4 @@
         </GroupBox>
     </Grid>
 </UserControl>
+

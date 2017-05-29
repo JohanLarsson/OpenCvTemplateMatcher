@@ -17,7 +17,7 @@
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <local:ZoomBorder Grid.Row="0">
+            <effects:Zoombox Grid.Row="0">
                 <Grid>
                     <Image Opacity="{Binding ElementName=SceneOpacity, Path=Value}" Source="{Binding Scene.FileName}" />
                     <Image Opacity="{Binding ElementName=OverlayOpacity, Path=Value}" Source="{Binding Overlay}">
@@ -26,7 +26,7 @@
                         </Image.Effect>
                     </Image>
                 </Grid>
-            </local:ZoomBorder>
+            </effects:Zoombox>
 
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
@@ -82,3 +82,6 @@
         </Grid>
     </Grid>
 </UserControl>
+
+
+
