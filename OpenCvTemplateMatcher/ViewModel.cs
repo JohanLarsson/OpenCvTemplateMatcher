@@ -222,11 +222,10 @@
                 var matches = this.BfMatcher.Matcher.Match(this.Scene.Descriptors, this.Model.Descriptors);
                 this.Elapsed = sw.Elapsed;
                 this.Matches.AddRange(matches.Select(m => new DMatchViewModel(m)));
-                var goodMatches = matches; //.Where(m => m.Distance < 0.05).ToArray();
 
                 this.FindAndApplyHomography(
-                    goodMatches.Select(m => this.Model.KeyPoints[m.TrainIdx].KeyPoint.Pt),
-                    goodMatches.Select(m => this.Scene.KeyPoints[m.QueryIdx].KeyPoint.Pt),
+                    matches.Select(m => this.Model.KeyPoints[m.TrainIdx].KeyPoint.Pt),
+                    matches.Select(m => this.Scene.KeyPoints[m.QueryIdx].KeyPoint.Pt),
                     this.Model.Image,
                     this.Model.Mask,
                     this.Scene.Image);
