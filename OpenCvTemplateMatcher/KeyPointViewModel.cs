@@ -17,6 +17,10 @@
 
         public float Y => this.Point.Y;
 
+        public float TopLeftX => this.Point.X - (this.Size / 2);
+
+        public float TopLeftY => this.Point.Y - (this.Size / 2);
+
         public float Angle => this.KeyPoint.Angle;
 
         public float Size => this.KeyPoint.Size;

@@ -222,7 +222,7 @@
                 var matches = this.BfMatcher.Matcher.Match(this.Scene.Descriptors, this.Model.Descriptors);
                 this.Elapsed = sw.Elapsed;
                 this.Matches.AddRange(matches.Select(m => new DMatchViewModel(m)));
-                var goodMatches = matches; // .Where(m => m.Distance < 0.2).ToArray();
+                var goodMatches = matches; //.Where(m => m.Distance < 0.05).ToArray();
 
                 this.FindAndApplyHomography(
                     goodMatches.Select(m => this.Model.KeyPoints[m.TrainIdx].KeyPoint.Pt),
@@ -276,9 +276,16 @@
                     {
                         if (homo.Rows == 3 && homo.Cols == 3)
                         {
-                            this.OffsetX = homo.At<double>(0, 2);
-                            this.OffsetY = homo.At<double>(1, 2);
-                            this.Angle = Math.Atan2(homo.At<double>(0, 1), homo.At<double>(0, 0)) * 180 / Math.PI;
+                            var x = model.Cols / 2;
+                            var y = model.Rows / 2;
+                            var transformed = Cv2.PerspectiveTransform(new[] { new Point2f(x, y), new Point2f(x + 1, y) }, homo);
+                            ////this.OffsetX = homo.At<double>(0, 2);
+                            ////this.OffsetY = homo.At<double>(1, 2);
+                            ////this.Angle = Math.Atan2(homo.At<double>(0, 1), homo.At<double>(0, 0)) * 180 / Math.PI;
+                            this.OffsetX = transformed[1].X - x;
+                            this.OffsetY = transformed[1].Y - y;
+                            this.Angle = Math.Atan2(transformed[1].Y - transformed[0].Y, transformed[1].X - transformed[0].X) * 180 / Math.PI;
+
                             using (var tmp = scene.Overlay())
                             {
                                 if (mask != null)

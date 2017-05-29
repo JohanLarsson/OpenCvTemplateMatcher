@@ -98,6 +98,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BfMatcherViewModel.cs" />
+    <Compile Include="Converters\DoubleConverter.cs" />
+    <Compile Include="Converters\HalfConverter.cs" />
     <Compile Include="DMatchViewModel.cs" />
     <Compile Include="KeyPointViewModel.cs" />
     <Compile Include="MatchesView.xaml.cs">

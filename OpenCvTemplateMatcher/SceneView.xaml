@@ -32,8 +32,8 @@
                     </ListBox.ItemsPanel>
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
-                            <Setter Property="Canvas.Left" Value="{Binding X}" />
-                            <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                            <Setter Property="Canvas.Left" Value="{Binding TopLeftX}" />
+                            <Setter Property="Canvas.Top" Value="{Binding TopLeftY}" />
                             <Setter Property="Width" Value="{Binding Size}" />
                             <Setter Property="Height" Value="{Binding Size}" />
                             <Setter Property="Template">
